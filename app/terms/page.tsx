@@ -1,15 +1,13 @@
-import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { BUSINESS_NAME, SITE_NAME, SUPPORT_EMAIL } from "@/lib/site";
 
-export const metadata = { title: "Terms of Service · YouTube AI-Genie" };
+export const metadata = { title: "Terms of Service" };
 
 export default function Page() {
   return (
     <>
-      <header className="mx-auto flex h-14 max-w-3xl items-center px-4">
-        <Link href="/" className="font-semibold">{SITE_NAME}</Link>
-      </header>
+      <SiteHeader signedIn={false} />
       <main className="mx-auto max-w-3xl space-y-4 px-4 pt-6 text-[15px] leading-relaxed [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
         <h1 className="text-3xl font-bold">Terms of Service</h1>
         <p className="text-sm text-muted-foreground">Last updated: November 2026</p>

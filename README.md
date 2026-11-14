@@ -4,7 +4,6 @@ Paste a YouTube link → summary, notes, LinkedIn/blog post, and a chat with the
 Free: 3 new videos/day (videos ≤ 60 min). Pro: ₹299/month via Razorpay.
 
 Stack: Next.js 15 (App Router) · TypeScript · Tailwind · Supabase (auth + Postgres + RLS) · Groq `llama-3.3-70b-versatile` · Supadata transcripts · Razorpay Subscriptions · Vercel.
-The original Streamlit/Python prototype is kept in `/legacy` for reference only (not deployed).
 
 ## Local setup
 ```bash
