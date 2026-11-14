@@ -3,12 +3,15 @@ import { getOptionalUser } from "@/lib/current-user";
 import { PricingCards } from "@/components/pricing-cards";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
+import { SubscribeButton } from "@/components/subscribe-button";
+import { getPlan } from "@/lib/plan";
 
 export const metadata = { title: "Pricing · YouTube AI-Genie" };
 export const dynamic = "force-dynamic";
 
 export default async function PricingPage() {
   const user = await getOptionalUser();
+  const plan = user ? await getPlan(user.id) : "free";
   return (
     <>
       <header className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
@@ -19,7 +22,7 @@ export default async function PricingPage() {
         <h1 className="text-center text-3xl font-bold">Pricing</h1>
         <PricingCards
           freeCta={<Button asChild variant="outline" className="w-full"><Link href={user ? "/dashboard" : "/login"}>{user ? "Open dashboard" : "Start free"}</Link></Button>}
-          proCta={<Button asChild className="w-full"><Link href={user ? "/dashboard" : "/login?next=/pricing"}>Go Pro</Link></Button>}
+          proCta={user ? <SubscribeButton isPro={plan === "pro"} /> : <Button asChild className="w-full"><Link href="/login?next=/pricing">Sign in to go Pro</Link></Button>}
         />
       </main>
       <SiteFooter />
