@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPlan } from "@/lib/plan";
 import { AppHeader } from "@/components/app-header";
 import { OutputPanel } from "@/components/output-panel";
+import { ChatPanel } from "@/components/chat-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const dynamic = "force-dynamic";
@@ -15,10 +16,11 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const user = await requireUser();
   const supabase = await createClient(); // RLS: only visible if this user processed the video
 
-  const [plan, { data: video }, { data: outputs }] = await Promise.all([
+  const [plan, { data: video }, { data: outputs }, { data: chats }] = await Promise.all([
     getPlan(user.id),
     supabase.from("videos").select("video_id,title,duration_seconds").eq("video_id", id).maybeSingle(),
     supabase.from("outputs").select("type,content").eq("video_id", id),
+    supabase.from("chats").select("role,content").eq("video_id", id).order("created_at", { ascending: true }).limit(100),
   ]);
   if (!video) notFound();
   const byType = Object.fromEntries((outputs ?? []).map((o) => [o.type, o.content])) as Record<string, string>;
@@ -44,12 +46,16 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="post">Post</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
           </TabsList>
           {(["summary", "notes", "post"] as const).map((t) => (
             <TabsContent key={t} value={t}>
               <OutputPanel videoId={video.video_id} type={t} initial={byType[t]} />
             </TabsContent>
           ))}
+          <TabsContent value="chat">
+            <ChatPanel videoId={video.video_id} initial={(chats ?? []) as { role: "user" | "assistant"; content: string }[]} />
+          </TabsContent>
         </Tabs>
       </main>
     </>
