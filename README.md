@@ -1,88 +1,32 @@
-# 🤖 YouTube AI-Genie
+# YouTube AI-Genie
 
-YouTube AI-Genie is a **Retrieval-Augmented Generation (RAG)** based AI chatbot that allows users to **ask questions about any YouTube video** using its transcript.
+Paste a YouTube link → summary, notes, LinkedIn/blog post, and a chat with the video.
+Free: 3 new videos/day (videos ≤ 60 min). Pro: ₹299/month via Razorpay.
 
-Instead of relying on an LLM’s memory, the system retrieves **relevant video content at runtime**, ensuring accurate, grounded, and context-aware answers.
+Stack: Next.js 15 (App Router) · TypeScript · Tailwind · Supabase (auth + Postgres + RLS) · Groq `llama-3.3-70b-versatile` · Supadata transcripts · Razorpay Subscriptions · Vercel.
+The original Streamlit/Python prototype is kept in `/legacy` for reference only (not deployed).
 
-The project is built with a **clean frontend–backend separation**, a modern GenAI stack, and a simple yet animated Streamlit UI.
-
----
-
-## ✨ What This Project Does
-
-- Takes a **YouTube video URL**
-- Extracts the **video transcript**
-- Splits the transcript into meaningful chunks
-- Converts chunks into **semantic embeddings**
-- Stores embeddings in a **FAISS vector database**
-- Retrieves relevant context for each user question
-- Uses a **Groq-hosted LLaMA model** to generate precise answers
-- Displays responses in a **modern animated UI**
-
----
-
-## 🧠 Why Retrieval-Augmented Generation (RAG)?
-
-Large Language Models can hallucinate when they don’t have access to real data.
-
-This project uses **RAG** to:
-- Reduce hallucinations
-- Ensure answers come **only from the video**
-- Handle long-form content efficiently
-- Scale without fine-tuning the model
-
----
-
-## 🏗️ Project Architecture
-
-
----
-
-## 🧩 Key Features
-
-- 🎥 Ask questions about any public YouTube video
-- 🧠 RAG-based question answering
-- 🔍 Semantic search using FAISS
-- ⚡ Ultra-fast inference using Groq LLaMA models
-- 🌍 Multi-language transcript support (English & Hindi)
-- 🎨 Clean Streamlit UI with animated background
-- 🧱 Modular backend design (UI and logic separated)
-- 🔐 Secure API key handling with `.env`
-
----
-
-## 🛠️ Tech Stack
-
-- **Python**
-- **Streamlit** – Frontend UI
-- **LangChain (LCEL)** – RAG pipeline
-- **FAISS** – Vector database
-- **HuggingFace Sentence Transformers** – Embeddings
-- **Groq (LLaMA 3.x)** – LLM inference
-- **YouTube Transcript API**
-- **dotenv** – Environment variables
-
----
-
-## 🚀 How to Run the Project
-
-### 1️⃣ Clone the repository
+## Local setup
 ```bash
-git clone https://github.com/your-username/youtube-ai-genie.git
-cd youtube-ai-genie
+cp .env.example .env.local   # fill in values (see below)
+npm install
+npm run dev
+```
 
+## Launch checklist (step 2 + 7 + 8)
+1. **Supabase**: create a project → SQL editor → run `supabase/migrations/0001_init.sql`.
+   - Auth → Providers: enable **Google** (Google Cloud OAuth client; redirect URI = the Supabase callback URL shown there). Email magic link is on by default.
+   - Auth → URL configuration: Site URL = your domain; add `https://<domain>/auth/callback` and `http://localhost:3000/auth/callback` to Redirect URLs.
+   - Copy URL, anon key, service-role key into env.
+2. **Transcripts**: create a Supadata account → `TRANSCRIPT_API_KEY`.
+3. **Groq**: `GROQ_API_KEY`.
+4. **Razorpay (test mode first)**: create a monthly ₹299 Plan → `RAZORPAY_PLAN_ID`; copy `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`.
+   Webhook: URL `https://<domain>/api/razorpay/webhook`, secret = `RAZORPAY_WEBHOOK_SECRET`, events:
+   `subscription.activated`, `subscription.charged`, `subscription.cancelled`, `subscription.completed`, `subscription.halted`.
+5. **Vercel**: import the repo, set every variable from `.env.example` (Production + Preview), use the Pro plan once payments are live, connect your domain, set `NEXT_PUBLIC_SITE_URL`.
+6. Test on a phone: sign in → process a video → hit the 3/day limit → pay (test card) → plan becomes Pro.
 
-
----
-
-## ✅ Next Steps (Optional)
-
-If you want, I can now:
-- 🏷️ Suggest **GitHub repo name & tags**
-- 📸 Add **Screenshots / Demo section**
-- ✍️ Write a **LinkedIn post** for this project
-- 📄 Create `requirements.txt`
-- 🧪 Add **future improvements section**
-
-Just tell me 👍
-
+## Security notes
+- `SUPABASE_SERVICE_ROLE_KEY`, `GROQ_API_KEY`, `RAZORPAY_KEY_SECRET`, webhook secret are server-only (`server-only` import guard on the admin client).
+- All writes to `videos`, `outputs`, `usage`, `chats` and `profiles.plan` happen server-side; RLS lets users only read their own rows.
+- Limits (3/day free, 60 min max) are enforced in `/api/process`, not in the UI.
