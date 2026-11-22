@@ -1,6 +1,5 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { FREE_DAILY_LIMIT } from "@/lib/limits";
 
 export async function getPlan(userId: string): Promise<"free" | "pro"> {
   const { data } = await createAdminClient().from("profiles").select("plan").eq("id", userId).maybeSingle();
@@ -14,14 +13,3 @@ export function startOfTodayIST(now = new Date()): string {
   ist.setUTCHours(0, 0, 0, 0);
   return new Date(ist.getTime() - offsetMs).toISOString();
 }
-
-export async function countTodayUsage(userId: string): Promise<number> {
-  const { count } = await createAdminClient()
-    .from("usage")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("created_at", startOfTodayIST());
-  return count ?? 0;
-}
-
-export { FREE_DAILY_LIMIT };

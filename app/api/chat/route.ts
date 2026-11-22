@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { complete, generateOutput, SINGLE_PASS_CHARS } from "@/lib/llm";
 import { startOfTodayIST } from "@/lib/plan";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const DAILY_CHAT_CAP = 200; // abuse guard, not a plan feature
 const HISTORY_TURNS = 10;

@@ -2,33 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-
-type RazorpayOptions = {
-  key: string;
-  subscription_id: string;
-  name: string;
-  description: string;
-  prefill?: { email?: string };
-  theme?: { color: string };
-  handler: () => void;
-  modal?: { ondismiss?: () => void };
-};
-declare global {
-  interface Window {
-    Razorpay?: new (o: RazorpayOptions) => { open: () => void };
-  }
-}
-
-function loadCheckout(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (window.Razorpay) return resolve(true);
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.body.appendChild(s);
-  });
-}
+import { PRO } from "@/lib/pricing";
+import { loadCheckout } from "@/lib/razorpay-client";
 
 export function SubscribeButton({ isPro }: { isPro: boolean }) {
   const router = useRouter();
@@ -48,7 +23,7 @@ export function SubscribeButton({ isPro }: { isPro: boolean }) {
         key: json.keyId,
         subscription_id: json.subscriptionId,
         name: "YouTube AI-Genie",
-        description: "Pro plan — ₹299/month",
+        description: `Pro plan — ₹${PRO.priceInr}/month`,
         prefill: { email: json.email ?? undefined },
         theme: { color: "#7c3aed" },
         handler: () => {

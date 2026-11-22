@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 const STEPS = [
-  ["1", "Paste a link", "Any public YouTube video with captions, up to 60 minutes."],
+  ["1", "Paste a link", "Any public YouTube video with captions, up to 3 hours. Longer videos use more credits."],
   ["2", "We read the transcript", "Fast, and cached, so repeat videos are instant."],
   ["3", "Get your content", "Summary, notes and a post — then chat with the video."],
 ];
@@ -24,7 +24,7 @@ const FEATURES = [
 ];
 
 const FAQ = [
-  ["Which videos work?", "Public YouTube videos that have captions (including auto-generated ones), up to 60 minutes long."],
+  ["Which videos work?", "Public YouTube videos that have captions (including auto-generated ones), up to 3 hours long. Each video costs 1 credit per 15 minutes."],
   ["What counts toward the free limit?", "Each new video you process. Re-opening a video you already processed is free."],
   ["Can I cancel Pro?", "Yes, any time. See the refund policy for details."],
   ["Is the AI always right?", "No. Outputs are generated from the transcript and can contain mistakes — review before publishing."],

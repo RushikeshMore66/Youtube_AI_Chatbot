@@ -1,7 +1,7 @@
 # YouTube AI-Genie
 
 Paste a YouTube link → summary, notes, LinkedIn/blog post, and a chat with the video.
-Free: 3 new videos/day (videos ≤ 60 min). Pro: ₹299/month via Razorpay.
+Credits: 1 credit per 15 min of video (max 3 h). Free trial: 1 credit (short video only). Pro: ₹299/month = 40 credits. Top-ups: ₹99 = 10, ₹249 = 30. All numbers live in `lib/pricing.ts`.
 
 Stack: Next.js 15 (App Router) · TypeScript · Tailwind · Supabase (auth + Postgres + RLS) · Groq `llama-3.3-70b-versatile` · Supadata transcripts · Razorpay Subscriptions · Vercel.
 
@@ -21,11 +21,12 @@ npm run dev
 3. **Groq**: `GROQ_API_KEY`.
 4. **Razorpay (test mode first)**: create a monthly ₹299 Plan → `RAZORPAY_PLAN_ID`; copy `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`.
    Webhook: URL `https://<domain>/api/razorpay/webhook`, secret = `RAZORPAY_WEBHOOK_SECRET`, events:
-   `subscription.activated`, `subscription.charged`, `subscription.cancelled`, `subscription.completed`, `subscription.halted`.
+   `subscription.activated`, `subscription.charged`, `subscription.cancelled`, `subscription.completed`, `subscription.halted`, and **`order.paid`** (credit top-ups).
+   Apply `supabase/migrations/0002_credits.sql` after `0001_init.sql`.
 5. **Vercel**: import the repo, set every variable from `.env.example` (Production + Preview), use the Pro plan once payments are live, connect your domain, set `NEXT_PUBLIC_SITE_URL`.
-6. Test on a phone: sign in → process a video → hit the 3/day limit → pay (test card) → plan becomes Pro.
+6. Test on a phone: sign in → process a video → spend the 1 trial credit → hit the credits wall → buy a top-up and subscribe (test card) → balance updates.
 
 ## Security notes
 - `SUPABASE_SERVICE_ROLE_KEY`, `GROQ_API_KEY`, `RAZORPAY_KEY_SECRET`, webhook secret are server-only (`server-only` import guard on the admin client).
 - All writes to `videos`, `outputs`, `usage`, `chats` and `profiles.plan` happen server-side; RLS lets users only read their own rows.
-- Limits (3/day free, 60 min max) are enforced in `/api/process`, not in the UI.
+- Credits are charged in `/api/process` via the atomic `spend_credits` SQL function and granted only by the signature-verified webhook, never from the browser.

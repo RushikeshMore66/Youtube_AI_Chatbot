@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getPlan, countTodayUsage } from "@/lib/plan";
-import { FREE_DAILY_LIMIT } from "@/lib/limits";
+import { getPlan } from "@/lib/plan";
+import { getBalance } from "@/lib/credits";
 import { AppHeader } from "@/components/app-header";
 import { ProcessForm } from "@/components/process-form";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,24 +15,23 @@ type Row = { created_at: string; videos: { video_id: string; title: string; dura
 export default async function Dashboard() {
   const user = await requireUser();
   const supabase = await createClient();
-  const [plan, used, { data }] = await Promise.all([
+  const [plan, balance, { data }] = await Promise.all([
     getPlan(user.id),
-    countTodayUsage(user.id),
+    getBalance(user.id),
     supabase.from("usage").select("created_at, videos(video_id,title,duration_seconds)").order("created_at", { ascending: false }).limit(50),
   ]);
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.videos);
 
   return (
     <>
-      <AppHeader plan={plan} />
+      <AppHeader plan={plan} credits={balance.total} />
       <main className="mx-auto max-w-3xl space-y-8 px-4 py-8">
         <section className="space-y-3">
           <h1 className="text-2xl font-bold">Paste a YouTube link</h1>
           <ProcessForm />
           <p className="text-sm text-muted-foreground">
-            {plan === "pro"
-              ? "Pro plan: unlimited videos."
-              : `${Math.max(0, FREE_DAILY_LIMIT - used)} of ${FREE_DAILY_LIMIT} free videos left today. Videos up to 60 minutes.`}
+            You have {balance.total} credit{balance.total === 1 ? "" : "s"}. A video costs 1 credit per 15 minutes (up to 3 hours).{" "}
+            {balance.total === 0 && <Link href="/pricing" className="font-medium text-primary underline">Get more credits</Link>}
           </p>
         </section>
 

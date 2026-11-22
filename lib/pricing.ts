@@ -23,15 +23,3 @@ export function creditsForDuration(seconds: number): number {
 }
 
 export type Balance = { trial: number; sub: number; topup: number };
-
-/** Mirrors the SQL spend order (trial, then subscription, then top-up). Null if the balance is too low. */
-export function splitSpend(b: Balance, cost: number): Balance | null {
-  if (b.trial + b.sub + b.topup < cost) return null;
-  let left = cost;
-  const take = (have: number) => {
-    const t = Math.min(have, left);
-    left -= t;
-    return have - t;
-  };
-  return { trial: take(b.trial), sub: take(b.sub), topup: take(b.topup) };
-}

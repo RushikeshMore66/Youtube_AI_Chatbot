@@ -4,8 +4,8 @@ import { ApiError, errorResponse, parseBody, requireApiUser } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseVideoId } from "@/lib/youtube";
 import { fetchTranscript } from "@/lib/transcript";
-import { countTodayUsage, getPlan } from "@/lib/plan";
-import { FREE_DAILY_LIMIT, MAX_VIDEO_SECONDS } from "@/lib/limits";
+import { getBalance, refundVideo, spendForVideo } from "@/lib/credits";
+import { creditsForDuration, MAX_VIDEO_SECONDS, TRIAL_MAX_SECONDS } from "@/lib/pricing";
 
 export const maxDuration = 60;
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       .maybeSingle<VideoMeta>();
 
     if (cached && cached.duration_seconds > MAX_VIDEO_SECONDS) {
-      throw new ApiError("TOO_LONG", "This video is longer than 60 minutes. Please try a shorter one.", 422);
+      throw new ApiError("TOO_LONG", "This video is longer than 3 hours. Please try a shorter one.", 422);
     }
 
     // 2. Already processed by this user? Re-opening is free and doesn't count.
@@ -43,17 +43,7 @@ export async function POST(req: Request) {
       .maybeSingle();
     if (cached && existing) return NextResponse.json({ video: cached });
 
-    // 3. Enforce the free-plan daily limit on the server.
-    const plan = await getPlan(user.id);
-    if (plan === "free" && (await countTodayUsage(user.id)) >= FREE_DAILY_LIMIT) {
-      throw new ApiError(
-        "LIMIT_REACHED",
-        `You've used your ${FREE_DAILY_LIMIT} free videos for today. Upgrade to Pro for unlimited videos.`,
-        429
-      );
-    }
-
-    // 4. Fetch + cache the transcript only if we don't have it.
+    // 3. Fetch + cache the transcript only if we don't have it.
     let video = cached;
     if (!video) {
       const t = await fetchTranscript(videoId);
@@ -68,15 +58,38 @@ export async function POST(req: Request) {
       if (error) throw error;
       video = { video_id: videoId, title: t.title, duration_seconds: t.durationSeconds, language: t.language };
       if (t.durationSeconds > MAX_VIDEO_SECONDS) {
-        throw new ApiError("TOO_LONG", "This video is longer than 60 minutes. Please try a shorter one.", 422);
+        throw new ApiError("TOO_LONG", "This video is longer than 3 hours. Please try a shorter one.", 422);
       }
     }
 
-    // 5. Record usage (unique per user+video, so retries never double count).
+    // 4. Charge credits by video length. Trial credits only cover short videos.
+    const cost = creditsForDuration(video.duration_seconds);
+    const useTrial = video.duration_seconds <= TRIAL_MAX_SECONDS;
+    const balance = await getBalance(user.id);
+    const spendable = balance.sub + balance.topup + (useTrial ? balance.trial : 0);
+    if (spendable < cost) {
+      const onlyTrial = !useTrial && balance.trial > 0 && balance.sub + balance.topup === 0;
+      throw new ApiError(
+        onlyTrial ? "UPGRADE_REQUIRED" : "INSUFFICIENT_CREDITS",
+        onlyTrial
+          ? "Your free trial covers videos up to 15 minutes. Upgrade to Pro or buy credits for longer videos."
+          : `This video needs ${cost} credit${cost > 1 ? "s" : ""} and you have ${spendable}. Upgrade to Pro or buy credits to continue.`,
+        402,
+        { needed: cost, balance: spendable }
+      );
+    }
+    if (!(await spendForVideo(user.id, videoId, cost, useTrial))) {
+      throw new ApiError("INSUFFICIENT_CREDITS", "Not enough credits. Upgrade to Pro or buy credits to continue.", 402, { needed: cost, balance: spendable });
+    }
+
+    // 5. Record usage (unique per user+video). If this fails, give the credits back.
     const { error: usageErr } = await db
       .from("usage")
       .upsert({ user_id: user.id, video_id: videoId }, { onConflict: "user_id,video_id", ignoreDuplicates: true });
-    if (usageErr) throw usageErr;
+    if (usageErr) {
+      await refundVideo(user.id, videoId);
+      throw usageErr;
+    }
 
     return NextResponse.json({ video });
   } catch (e) {

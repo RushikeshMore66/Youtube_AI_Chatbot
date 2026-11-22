@@ -54,8 +54,8 @@ export function ProcessForm() {
       {error && (
         <p className="text-sm text-destructive">
           {error.message}{" "}
-          {error.code === "LIMIT_REACHED" && (
-            <Link href="/pricing" className="font-medium underline">See Pro</Link>
+          {(error.code === "INSUFFICIENT_CREDITS" || error.code === "UPGRADE_REQUIRED") && (
+            <Link href="/pricing" className="font-medium underline">Upgrade or buy credits</Link>
           )}
         </p>
       )}

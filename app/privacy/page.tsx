@@ -15,7 +15,7 @@ export default function Page() {
         <h2>What we collect</h2>
         <ul>
           <li>Account data: your email address and, if you use Google sign-in, your basic Google profile (via Supabase Auth).</li>
-          <li>Usage data: which YouTube videos you process and when, used to apply plan limits and show your history.</li>
+          <li>Usage data: which YouTube videos you process and when, used to apply credit charges and show your history.</li>
           <li>Content: transcripts of public YouTube videos you submit, the summaries/notes/posts generated from them, and your chat messages about a video.</li>
           <li>Payment data: payments are handled by Razorpay. We never see or store your card or UPI details; we store only your subscription ID and plan.</li>
         </ul>

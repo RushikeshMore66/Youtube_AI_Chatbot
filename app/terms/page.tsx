@@ -16,8 +16,9 @@ export default function Page() {
         <p>{SITE_NAME} generates summaries, notes, social posts and chat answers from YouTube video transcripts using AI. Output may be inaccurate or incomplete; review it before relying on or publishing it.</p>
         <h2>Accounts and plans</h2>
         <ul>
-          <li>Free plan: up to 3 new videos per day, videos up to 60 minutes long.</li>
-          <li>Pro plan: ₹299 per month, billed monthly through Razorpay, renews until cancelled. Unlimited videos (fair use applies).</li>
+          <li>Free trial: 1 credit, usable once on a video up to 15 minutes long.</li>
+          <li>Pro plan: ₹299 per month, billed monthly through Razorpay, renews until cancelled. Includes 40 credits per billing cycle; unused subscription credits do not roll over.</li>
+          <li>Credits: a video costs 1 credit per 15 minutes of length (rounded up), up to 3 hours. Top-up credits (₹99 for 10, ₹249 for 30) are one-time purchases that do not expire. Re-opening a video you already processed is free.</li>
           <li>You may cancel any time; access continues to the end of the paid period.</li>
         </ul>
         <h2>Acceptable use</h2>

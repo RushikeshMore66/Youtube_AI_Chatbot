@@ -10,19 +10,21 @@ export type ErrorCode =
   | "NO_CAPTIONS"
   | "TOO_LONG"
   | "LIMIT_REACHED"
+  | "INSUFFICIENT_CREDITS"
+  | "UPGRADE_REQUIRED"
   | "NOT_FOUND"
   | "UPSTREAM"
   | "SERVER";
 
 export class ApiError extends Error {
-  constructor(public code: ErrorCode, message: string, public status: number) {
+  constructor(public code: ErrorCode, message: string, public status: number, public details?: Record<string, unknown>) {
     super(message);
   }
 }
 
 export function errorResponse(e: unknown) {
   if (e instanceof ApiError) {
-    return NextResponse.json({ error: { code: e.code, message: e.message } }, { status: e.status });
+    return NextResponse.json({ error: { code: e.code, message: e.message, ...(e.details ? { details: e.details } : {}) } }, { status: e.status });
   }
   console.error("Unhandled API error:", e);
   return NextResponse.json(

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan } from "@/lib/plan";
+import { getBalance } from "@/lib/credits";
 import { AppHeader } from "@/components/app-header";
 import { OutputPanel } from "@/components/output-panel";
 import { ChatPanel } from "@/components/chat-panel";
@@ -16,8 +17,9 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const user = await requireUser();
   const supabase = await createClient(); // RLS: only visible if this user processed the video
 
-  const [plan, { data: video }, { data: outputs }, { data: chats }] = await Promise.all([
+  const [plan, balance, { data: video }, { data: outputs }, { data: chats }] = await Promise.all([
     getPlan(user.id),
+    getBalance(user.id),
     supabase.from("videos").select("video_id,title,duration_seconds").eq("video_id", id).maybeSingle(),
     supabase.from("outputs").select("type,content").eq("video_id", id),
     supabase.from("chats").select("role,content").eq("video_id", id).order("created_at", { ascending: true }).limit(100),
@@ -27,7 +29,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
 
   return (
     <>
-      <AppHeader plan={plan} />
+      <AppHeader plan={plan} credits={balance.total} />
       <main className="mx-auto max-w-3xl space-y-5 px-4 py-6">
         <div>
           <Link href="/dashboard" className="text-sm text-muted-foreground">← Dashboard</Link>

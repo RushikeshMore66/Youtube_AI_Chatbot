@@ -4,7 +4,7 @@ import { ApiError, errorResponse, parseBody, requireApiUser } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateOutput } from "@/lib/llm";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const Body = z.object({
   videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
