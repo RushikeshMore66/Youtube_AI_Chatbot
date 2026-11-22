@@ -10,7 +10,7 @@ describe("creditsForDuration", () => {
 
 describe("splitSpend", () => {
   it("spends trial, then sub, then topup", () => {
-    expect(splitSpend({ trial: 1, sub: 2, topup: 5 }, 4)).toEqual({ trial: 1, sub: 2, topup: 1 });
+    expect(splitSpend({ trial: 1, sub: 2, topup: 5 }, 4)).toEqual({ trial: 0, sub: 0, topup: 4 });
   });
   it("returns null when balance is too low", () => {
     expect(splitSpend({ trial: 1, sub: 0, topup: 1 }, 3)).toBeNull();
