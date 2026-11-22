@@ -26,14 +26,14 @@ Annual plans, coupons, refunds automation, per-feature (chat/notes) charging, te
 
 ### Pricing rules (placeholder numbers — owner must verify against real Supadata + Groq costs)
 - Video cost: `ceil(minutes / 15)` credits, minimum 1. Max video length 180 min (12 credits).
-- Trial: 3 credits granted once at signup; trial credits only work on videos <= 15 min (1 credit each) = "3 short videos".
+- Trial: 1 credit granted once at signup (owner decision); works only on a video <= 15 min = "1 short video".
 - Pro: Rs 299/month, grants 40 credits each billing cycle. Reset to 40 on each successful charge (no rollover). Cancel/halt/expire zeroes subscription credits.
 - Top-ups (one-time, never expire): Rs 99 = 10 credits, Rs 249 = 30 credits. Per-credit price: top-up 9.9 / 8.3, Pro 7.5 — Pro is deliberately cheapest.
 - Re-opening a video the user already processed is free (existing behaviour).
 - Spend order: trial/subscription credits first, then top-up credits.
 
 ### Data (new migration `0002_credits.sql`)
-- `profiles`: add `sub_credits int`, `topup_credits int`, `trial_credits int` (all >= 0, check constraints). Existing users get trial 3; existing `pro` users get sub_credits 40.
+- `profiles`: add `sub_credits int`, `topup_credits int`, `trial_credits int` (all >= 0, check constraints). Existing users get trial 1; existing `pro` users get sub_credits 40.
 - `credit_ledger(id, user_id, delta, bucket, reason, ref, created_at)` with `unique (reason, ref)` for idempotency (ref = video_id for spends, Razorpay payment/charge id for grants).
 - SQL functions (security definer, service role only): `spend_credits(user, cost, video_id)` — atomic, row-locks the profile, deducts across buckets, returns false if insufficient; `grant_credits(...)` — idempotent via the ledger unique key.
 
@@ -52,7 +52,7 @@ Annual plans, coupons, refunds automation, per-feature (chat/notes) charging, te
 ### UI
 - Dashboard + header show credit balance; "Pro" badge kept.
 - Out-of-credits state (in process form): shows cost needed vs balance with two buttons: Upgrade to Pro, Buy credits.
-- Pricing page rewritten: Free trial (3 short videos), Pro (Rs 299, 40 credits/mo, best value), top-up packs, and a "how credits work" line (1 credit ~ 15 min of video).
+- Pricing page rewritten: Free trial (1 short video), Pro (Rs 299, 40 credits/mo, best value), top-up packs, and a "how credits work" line (1 credit ~ 15 min of video).
 
 ## Constraints / risks
 - Long transcripts (up to 3h) may exceed the LLM context in `/api/generate` and `/api/chat`; the builder must check and add chunked (map-reduce) summarization or truncation with an explicit limit. This is required work, not optional.
