@@ -7,7 +7,7 @@ import { AppHeader } from "@/components/app-header";
 import { ProcessForm } from "@/components/process-form";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const metadata = { title: "Dashboard · YouTube AI-Genie" };
+export const metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
 
 type Row = { created_at: string; videos: { video_id: string; title: string; duration_seconds: number } | null };
